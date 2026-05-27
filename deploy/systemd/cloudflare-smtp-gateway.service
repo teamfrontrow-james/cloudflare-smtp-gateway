@@ -1,0 +1,29 @@
+# Run cloudflare-smtp-gateway as a long-lived service on a VPS/VM.
+#
+#   sudo useradd --system --home /opt/cloudflare-smtp-gateway --shell /usr/sbin/nologin cmg   # optional
+#   sudo cp -r <repo> /opt/cloudflare-smtp-gateway && cd /opt/cloudflare-smtp-gateway && npm ci && npm run build
+#   sudo cp deploy/systemd/cloudflare-smtp-gateway.service /etc/systemd/system/
+#   sudo install -m 600 .env /etc/cloudflare-smtp-gateway.env       # your filled-in config
+#   sudo systemctl daemon-reload && sudo systemctl enable --now cloudflare-smtp-gateway
+[Unit]
+Description=cloudflare-smtp-gateway (SMTP/HTTP gateway for Cloudflare Email Service)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cmg
+WorkingDirectory=/opt/cloudflare-smtp-gateway
+EnvironmentFile=/etc/cloudflare-smtp-gateway.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/cloudflare-smtp-gateway/data
+
+[Install]
+WantedBy=multi-user.target

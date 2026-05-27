@@ -1,0 +1,34 @@
+# Drop-in snippet: add cloudflare-smtp-gateway alongside an existing app in the SAME
+# compose project. Your app then sends mail to host "mail" on port 2525 (SMTP)
+# or http://mail:3000/send (HTTP) — nothing is exposed to the public internet.
+#
+# Merge the `mail:` service into your own docker-compose.yml.
+services:
+  # ── your existing app ──
+  app:
+    # image: your/app
+    environment:
+      # Example: point a generic SMTP client at the gateway over the compose network.
+      SMTP_HOST: mail
+      SMTP_PORT: "2525"
+      SMTP_USER: app
+      SMTP_PASS: ${MAIL_GATEWAY_SMTP_PASS}
+    depends_on:
+      - mail
+
+  # ── the gateway (internal only — no `ports:` mapping) ──
+  mail:
+    image: ghcr.io/teamfrontrow-james/cloudflare-smtp-gateway:latest
+    restart: unless-stopped
+    environment:
+      CF_API_TOKEN: ${CF_API_TOKEN}
+      CF_ACCOUNT_ID: ${CF_ACCOUNT_ID}
+      ALLOWED_FROM: ${ALLOWED_FROM}            # e.g. example.com
+      SMTP_USERS: app:${MAIL_GATEWAY_SMTP_PASS}
+      BIND_HOST: 0.0.0.0
+      DATA_DIR: /data
+    volumes:
+      - cmg-data:/data
+
+volumes:
+  cmg-data:

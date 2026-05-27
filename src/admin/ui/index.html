@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>cloudflare-smtp-gateway · admin</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Login -->
+    <main id="login" class="card hidden">
+      <h1>cloudflare-smtp-gateway</h1>
+      <p class="muted">SMTP &amp; HTTP sending gateway for Cloudflare Email Service.</p>
+      <form id="login-form">
+        <label>Admin password
+          <input type="password" id="login-password" autocomplete="current-password" required />
+        </label>
+        <button type="submit">Sign in</button>
+        <p class="error" id="login-error"></p>
+      </form>
+    </main>
+
+    <!-- App -->
+    <div id="app" class="hidden">
+      <header class="topbar">
+        <strong>cloudflare-smtp-gateway</strong>
+        <nav>
+          <button data-tab="setup" class="tab active">Setup</button>
+          <button data-tab="domain" class="tab">Domain &amp; DNS</button>
+          <button data-tab="creds" class="tab">Credentials</button>
+          <button data-tab="test" class="tab">Test send</button>
+          <button data-tab="logs" class="tab">Activity</button>
+        </nav>
+        <button id="logout" class="ghost">Sign out</button>
+      </header>
+
+      <!-- Setup -->
+      <section id="tab-setup" class="tab-panel">
+        <h2>Cloudflare Email Service</h2>
+        <p class="muted">
+          Create a scoped API token with the <code>Send Email</code> permission
+          (add <code>DNS:Edit</code> only if you want one-click DNS on the next tab).
+        </p>
+        <form id="setup-form" class="grid">
+          <label>Account ID
+            <input id="cfAccountId" placeholder="32-char account id" />
+          </label>
+          <label>API token <span id="cfTokenState" class="pill"></span>
+            <input id="cfApiToken" type="password" placeholder="leave blank to keep existing" />
+          </label>
+          <label class="full">Allowed sender domains/addresses (comma-separated)
+            <input id="allowedFrom" placeholder="example.com, noreply@example.com" />
+          </label>
+          <div class="full row">
+            <button type="submit">Save</button>
+            <button type="button" id="verify-creds" class="ghost">Verify credentials</button>
+            <span id="setup-result" class="result"></span>
+          </div>
+        </form>
+        <div id="locked-note" class="muted hidden"></div>
+      </section>
+
+      <!-- Domain & DNS -->
+      <section id="tab-domain" class="tab-panel hidden">
+        <h2>Domain verification</h2>
+        <p class="muted">Add these DNS records so Cloudflare will send on behalf of your domain (SPF, DKIM, DMARC and a bounce subdomain).</p>
+        <div class="row">
+          <input id="domain-input" placeholder="example.com" />
+          <button id="check-domain">Check status</button>
+          <button id="apply-dns" class="ghost" disabled>One-click add records</button>
+        </div>
+        <p id="domain-status" class="result"></p>
+        <table id="dns-table" class="hidden">
+          <thead><tr><th>Type</th><th>Name</th><th>Value</th><th>Priority</th><th>Purpose</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="muted small">DNS changes can take a few minutes (up to 24h) to propagate. Re-check status after adding them.</p>
+      </section>
+
+      <!-- Credentials -->
+      <section id="tab-creds" class="tab-panel hidden">
+        <h2>Sending credentials</h2>
+
+        <h3>SMTP users <button id="mint-smtp" class="ghost small">+ Generate user</button></h3>
+        <p class="muted">Put these into WP Mail SMTP (or any SMTP client). Passwords are write-only — generate a new one to rotate.</p>
+        <table id="smtp-table">
+          <thead><tr><th>Username</th><th>Password</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+
+        <h3>HTTP API token <button id="mint-http" class="ghost small">Generate / rotate</button></h3>
+        <p id="http-token-state" class="muted"></p>
+
+        <div id="wp-settings" class="callout hidden">
+          <h4>WP Mail SMTP settings</h4>
+          <pre id="wp-settings-body"></pre>
+        </div>
+      </section>
+
+      <!-- Test send -->
+      <section id="tab-test" class="tab-panel hidden">
+        <h2>Send a test email</h2>
+        <form id="test-form" class="grid">
+          <label>To <input id="test-to" type="email" placeholder="you@example.com" required /></label>
+          <label>From <input id="test-from" placeholder="(defaults to first allowed sender)" /></label>
+          <div class="full row">
+            <button type="submit">Send test</button>
+            <span id="test-result" class="result"></span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Logs -->
+      <section id="tab-logs" class="tab-panel hidden">
+        <h2>Recent activity <button id="refresh-logs" class="ghost small">Refresh</button></h2>
+        <table id="logs-table">
+          <thead><tr><th>Time</th><th>Via</th><th>From</th><th>To</th><th>Subject</th><th>Outcome</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

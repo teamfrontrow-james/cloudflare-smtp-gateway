@@ -1,0 +1,33 @@
+# Render.com blueprint.
+#
+# NOTE: Render web services expose HTTP only — so on Render you get the HTTP
+# /send API + admin UI, but NOT the public SMTP port. Use this if your callers
+# speak HTTP (or run the SMTP listener elsewhere, e.g. localhost next to your app).
+# For public SMTP, prefer Fly.io (deploy/fly.toml) or a VM.
+services:
+  - type: web
+    name: cloudflare-smtp-gateway
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    disk:
+      name: cmg-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: BIND_HOST
+        value: 0.0.0.0
+      - key: HTTP_PORT
+        value: "10000" # Render injects PORT; set HTTP_PORT to match if needed
+      - key: DATA_DIR
+        value: /data
+      - key: CF_API_TOKEN
+        sync: false
+      - key: CF_ACCOUNT_ID
+        sync: false
+      - key: ALLOWED_FROM
+        sync: false
+      - key: HTTP_TOKEN
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

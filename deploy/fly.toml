@@ -1,0 +1,52 @@
+# Fly.io deploy. Fly natively supports raw TCP, so BOTH the SMTP and HTTP ports
+# work here (unlike HTTP-only PaaS tiers).
+#
+#   fly launch --copy-config --no-deploy        # creates the app
+#   fly secrets set CF_API_TOKEN=... CF_ACCOUNT_ID=... ALLOWED_FROM=example.com \
+#                   SMTP_USERS=app:LONGSECRET ADMIN_PASSWORD=... HTTP_TOKEN=...
+#   fly deploy
+#
+# `app` must be globally unique across Fly. The value below is a suggestion;
+# `fly launch` will prompt to rename if it's taken. `primary_region = "iad"`
+# (US-East, Ashburn) is a sensible default — change it to a region near you:
+# https://fly.io/docs/reference/regions/
+app = "cloudflare-smtp-gateway-frontrow"
+primary_region = "iad"
+
+[build]
+  dockerfile = "../Dockerfile"
+
+[env]
+  BIND_HOST = "0.0.0.0"
+  SMTP_PORT = "2525"
+  HTTP_PORT = "3000"
+  DATA_DIR = "/data"
+
+[mounts]
+  source = "cmg_data"
+  destination = "/data"
+
+# HTTP /send + admin UI
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+
+# Raw TCP for SMTP submission
+[[services]]
+  protocol = "tcp"
+  internal_port = 2525
+
+  [[services.ports]]
+    port = 2525
+
+  [[services.tcp_checks]]
+    interval = "30s"
+    timeout = "5s"
