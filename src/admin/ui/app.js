@@ -87,6 +87,7 @@ function renderConfig(c) {
   }
 
   renderCreds(c);
+  updateDashLinks(c);
 }
 
 $('#setup-form').addEventListener('submit', async (e) => {
@@ -120,49 +121,18 @@ $('#verify-creds').addEventListener('click', async () => {
   el.className = 'result ' + (data.ok ? 'ok' : 'err');
 });
 
-// ── Domain & DNS ─────────────────────────────────────────────────────────────
-$('#check-domain').addEventListener('click', async () => {
-  const domain = $('#domain-input').value.trim();
-  if (!domain) return;
-  const statusEl = $('#domain-status');
-  statusEl.textContent = 'Checking…';
-  statusEl.className = 'result';
-  const { data } = await api('/domain?domain=' + encodeURIComponent(domain));
-  const map = { verified: 'ok', pending: '', unknown: '', not_found: 'err' };
-  statusEl.textContent =
-    'Status: ' + data.status + (data.onCloudflareDns ? ' · domain is on Cloudflare DNS' : ' · domain not on Cloudflare DNS');
-  statusEl.className = 'result ' + (map[data.status] || '');
-
-  const tbody = $('#dns-table tbody');
-  tbody.innerHTML = '';
-  if (data.records && data.records.length) {
-    $('#dns-table').classList.remove('hidden');
-    for (const r of data.records) {
-      const tr = document.createElement('tr');
-      tr.innerHTML =
-        `<td>${r.type}</td><td><code>${r.name}</code></td><td><code>${r.content}</code></td>` +
-        `<td>${r.priority ?? ''}</td><td>${r.note || ''}</td>`;
-      tbody.appendChild(tr);
-    }
-    $('#apply-dns').disabled = !data.onCloudflareDns;
-  } else {
-    $('#dns-table').classList.add('hidden');
-    if (data.status === 'unknown') {
-      statusEl.textContent +=
-        ' — could not auto-fetch records; see the Cloudflare Email Service dashboard for SPF/DKIM/DMARC values.';
-    }
-    $('#apply-dns').disabled = true;
-  }
-});
-
-$('#apply-dns').addEventListener('click', async () => {
-  const domain = $('#domain-input').value.trim();
-  const statusEl = $('#domain-status');
-  statusEl.textContent = 'Adding records…';
-  const { ok, data } = await api('/dns-apply', { method: 'POST', body: JSON.stringify({ domain }) });
-  statusEl.textContent = ok && data.ok ? 'Records added. Re-check status in a few minutes.' : (data.error || 'Some records failed.');
-  statusEl.className = 'result ' + (ok && data.ok ? 'ok' : 'err');
-});
+// ── Domain onboarding ────────────────────────────────────────────────────────
+// Onboarding is done in the Cloudflare dashboard (no public API). Point the
+// links at the account-scoped Email Sending page when we know the account ID.
+function updateDashLinks(c) {
+  const url = c && c.cfAccountId
+    ? `https://dash.cloudflare.com/${c.cfAccountId}/email-service/sending`
+    : 'https://dash.cloudflare.com/?to=/:account/email-service/sending';
+  const a = $('#dash-link');
+  const b = $('#dash-link-btn');
+  if (a) a.href = url;
+  if (b) b.href = url;
+}
 
 // ── Credentials ──────────────────────────────────────────────────────────────
 function renderCreds(c) {

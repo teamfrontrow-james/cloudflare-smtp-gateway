@@ -6,10 +6,10 @@
  *     POST /accounts/{account_id}/email/sending/send
  *     -> { success, errors[], result: { delivered[], queued[], permanent_bounces[] } }
  *
- * - The DNS + sending-domain helpers power the OPTIONAL one-click domain setup in
- *   the admin UI. Email Service is in beta; the exact domain-management paths may
- *   shift, so those calls degrade gracefully (return null / 'unknown') instead of
- *   throwing, and the UI always falls back to manual DNS instructions.
+ * - verifyCredentials(): cheap token/account check for the admin UI Setup tab.
+ *
+ * Sending-domain onboarding is dashboard-only (no public API), so it lives in the
+ * Cloudflare dashboard, not here.
  */
 import { getConfig } from './config.js';
 
@@ -119,80 +119,7 @@ export async function verifyCredentials(): Promise<{ ok: boolean; detail: string
   }
 }
 
-// ── Optional domain/DNS helpers (best-effort; see file header) ────────────────
-
-export interface RequiredDnsRecord {
-  type: 'TXT' | 'MX' | 'CNAME';
-  name: string;
-  content: string;
-  priority?: number;
-  note: string;
-}
-
-export interface SendingDomainStatus {
-  domain: string;
-  status: 'verified' | 'pending' | 'unknown' | 'not_found';
-  records: RequiredDnsRecord[];
-}
-
-interface ZoneSummary {
-  id: string;
-  name: string;
-}
-
-export async function findZoneId(domain: string): Promise<string | null> {
-  try {
-    const body = await cfFetch<ZoneSummary[]>(`/zones?name=${encodeURIComponent(domain)}`);
-    return body.result[0]?.id ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function createDnsRecord(zoneId: string, record: RequiredDnsRecord): Promise<void> {
-  await cfFetch(`/zones/${zoneId}/dns_records`, {
-    method: 'POST',
-    body: JSON.stringify({
-      type: record.type,
-      name: record.name,
-      content: record.content,
-      ...(record.priority !== undefined ? { priority: record.priority } : {}),
-      comment: 'Added by cloudflare-smtp-gateway',
-    }),
-  });
-}
-
-/**
- * Fetch the sending domain's verification status + the DNS records Cloudflare
- * requires. Email Service returns the exact DKIM selector/bounce target per
- * domain, so we surface whatever it gives us. Returns 'unknown' if the beta
- * endpoint shape differs, so the UI can fall back to its documentation link.
- */
-export async function getSendingDomain(domain: string): Promise<SendingDomainStatus> {
-  const { cfAccountId } = getConfig();
-  try {
-    const body = await cfFetch<unknown>(
-      `/accounts/${cfAccountId}/email/sending/domains/${encodeURIComponent(domain)}`,
-    );
-    const r = body.result as Record<string, unknown> | null;
-    if (!r) return { domain, status: 'not_found', records: [] };
-    const status =
-      r.verified === true || r.status === 'verified'
-        ? 'verified'
-        : ('pending' as const);
-    const records = Array.isArray(r.dns_records)
-      ? (r.dns_records as Record<string, unknown>[]).map(
-          (d): RequiredDnsRecord => ({
-            type: (d.type as RequiredDnsRecord['type']) ?? 'TXT',
-            name: String(d.name ?? ''),
-            content: String(d.value ?? d.content ?? ''),
-            priority: typeof d.priority === 'number' ? d.priority : undefined,
-            note: String(d.purpose ?? d.note ?? ''),
-          }),
-        )
-      : [];
-    return { domain, status, records };
-  } catch {
-    return { domain, status: 'unknown', records: [] };
-  }
-}
+// Note: Cloudflare Email Service domain onboarding (SPF/DKIM/DMARC + bounce MX)
+// is performed in the Cloudflare dashboard — there is no public REST API for it —
+// so the admin UI links users to dash.cloudflare.com/<account>/email-service/sending
+// rather than attempting to manage domains/DNS here.

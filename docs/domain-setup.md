@@ -1,42 +1,50 @@
 # Domain setup & verification
 
 Before Cloudflare Email Service will send on behalf of your domain, you must
-prove you own it and authorize sending via DNS. cloudflare-smtp-gateway's admin UI shows
-you exactly which records to add (and can add them for you if your domain uses
-Cloudflare DNS).
+onboard the domain in the **Cloudflare dashboard** (this authorizes sending and
+adds the SPF/DKIM/DMARC + bounce records). This is done in Cloudflare's UI —
+there is no public API for it — so cloudflare-smtp-gateway links you straight to
+the right page rather than managing DNS itself.
 
-## 1. Create a scoped API token
+## 1. Onboard the sending domain (Cloudflare dashboard)
+
+Go to **Email Sending** at the **account** level (not inside a specific website):
+
+- Direct link: `https://dash.cloudflare.com/<ACCOUNT_ID>/email-service/sending`
+- Or in the sidebar: **Build → Compute → Email Service → Email Sending**.
+
+Then:
+
+1. Click **Onboard Domain**.
+2. Choose your domain → **Continue**.
+3. Click **Add records and onboard**. If the domain uses **Cloudflare DNS**, the
+   records are added automatically; otherwise copy the shown records into your DNS
+   provider. Cloudflare adds:
+   - **SPF** (TXT) — authorizes Cloudflare to send.
+   - **DKIM** (TXT) — cryptographic signing (Cloudflare issues the selector/value).
+   - **DMARC** (TXT, `_dmarc.yourdomain`) — alignment/reporting policy.
+   - **Bounce subdomain** (MX) — handles bounces.
+4. Wait for the status to leave **Syncing** (a few minutes; DNS can take up to 24h).
+
+> Requires a **Workers Paid** plan with Email Sending enabled. Email Sending is in beta.
+
+## 2. Create a scoped API token
+
 Cloudflare dashboard → **My Profile → API Tokens → Create Token → Custom token**:
 
-- **Send Email** — *Edit/Use* (required, for sending).
-- **DNS → Edit** on the relevant zone — *only* if you want the **one-click "add
-  records"** button in the admin UI. Otherwise skip it and add records manually.
+- **Send Email** — *Edit/Use* (this is all the gateway needs).
 
-Copy the token and your **Account ID** (Workers/Overview page) into the admin UI
-**Setup** tab, then click **Verify credentials**.
+Copy the token and your **Account ID** into the gateway's admin UI **Setup** tab,
+then click **Verify credentials**.
 
-## 2. Add the DNS records
-Open the **Domain & DNS** tab, enter your domain, and click **Check status**. The
-gateway asks Cloudflare for the records your domain needs, typically:
+## 3. Confirm it works
 
-- **SPF** (TXT) — authorizes Cloudflare to send.
-- **DKIM** (TXT) — cryptographic signing; Cloudflare gives you the selector + value.
-- **DMARC** (TXT, `_dmarc.yourdomain`) — alignment/reporting policy.
-- **Bounce subdomain** (MX, e.g. `cf-bounce`) — handles bounces.
+In the admin UI **Test send** tab, send a test to an address you control. A
+delivered result means the domain is fully onboarded and you're ready — point
+WordPress / your apps at the gateway. (`from` must be an address at a domain in
+`ALLOWED_FROM`.)
 
-If the domain is on **Cloudflare DNS**, click **One-click add records**. Otherwise
-copy each row into your DNS provider.
-
-> The exact records are issued per-domain by Cloudflare. If the beta API doesn't
-> return them to the gateway, the UI says so — add them from the **Cloudflare
-> Email Service dashboard** instead.
-
-## 3. Verify
-DNS can take a few minutes (up to 24h) to propagate. Re-click **Check status**
-until it shows **verified**. Then any address at that domain can be used as a
-`from` (as long as it's listed in `ALLOWED_FROM`).
-
-## 4. Deliverability tips
+## Deliverability tips
 - Keep SPF, DKIM, and DMARC all passing — misalignment lands you in spam.
 - Use a real, monitored `from` address and a matching `reply_to`.
 - Warm up gradually if you'll send high volume.

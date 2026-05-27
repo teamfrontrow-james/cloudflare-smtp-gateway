@@ -133,38 +133,8 @@ export async function registerAdminRoutes(app: FastifyInstance): Promise<void> {
     return cf.verifyCredentials();
   });
 
-  app.get('/admin/api/domain', async (req, reply) => {
-    if (!requireAuth(req, reply)) return;
-    const domain = (req.query as { domain?: string }).domain;
-    if (!domain) return reply.code(400).send({ error: 'domain query param required.' });
-    const status = await cf.getSendingDomain(domain);
-    const zoneId = await cf.findZoneId(domain);
-    return { ...status, onCloudflareDns: Boolean(zoneId) };
-  });
-
-  app.post('/admin/api/dns-apply', async (req, reply) => {
-    if (!requireAuth(req, reply)) return;
-    const { domain } = (req.body ?? {}) as { domain?: string };
-    if (!domain) return reply.code(400).send({ error: 'domain required.' });
-    const zoneId = await cf.findZoneId(domain);
-    if (!zoneId) {
-      return reply.code(400).send({ error: 'Domain is not on Cloudflare DNS; add the records manually.' });
-    }
-    const status = await cf.getSendingDomain(domain);
-    if (!status.records.length) {
-      return reply.code(409).send({ error: 'No DNS records available from Cloudflare yet. Try again shortly.' });
-    }
-    const results: { name: string; ok: boolean; error?: string }[] = [];
-    for (const rec of status.records) {
-      try {
-        await cf.createDnsRecord(zoneId, rec);
-        results.push({ name: rec.name, ok: true });
-      } catch (err) {
-        results.push({ name: rec.name, ok: false, error: err instanceof Error ? err.message : 'failed' });
-      }
-    }
-    return { ok: results.every((r) => r.ok), results };
-  });
+  // Domain onboarding is performed in the Cloudflare dashboard (no public API),
+  // so the admin UI links there directly — see the "Onboard your sending domain" tab.
 
   app.post('/admin/api/test', async (req, reply) => {
     if (!requireAuth(req, reply)) return;

@@ -37,8 +37,10 @@ your code / forms ──HTTP POST─────┘     (auth · from-pinning ·
    1,000. (Email *Routing*/receiving is free, but this tool sends, so Paid is
    required.) Email Service is currently in beta.
 2. A **domain** you can add DNS records to.
-3. A **Cloudflare API token** with the **Send Email** permission
-   (add **DNS:Edit** too if you want the one-click DNS feature). See
+3. Your sending domain **onboarded** in the Cloudflare dashboard
+   (**Email Service → Email Sending → Onboard Domain**) — this is dashboard-only
+   and adds the SPF/DKIM/DMARC + bounce records.
+4. A **Cloudflare API token** with the **Send Email** permission. See
    [docs/domain-setup.md](docs/domain-setup.md).
 
 ---

@@ -60,21 +60,27 @@
         <div id="locked-note" class="muted hidden"></div>
       </section>
 
-      <!-- Domain & DNS -->
+      <!-- Domain onboarding -->
       <section id="tab-domain" class="tab-panel hidden">
-        <h2>Domain verification</h2>
-        <p class="muted">Add these DNS records so Cloudflare will send on behalf of your domain (SPF, DKIM, DMARC and a bounce subdomain).</p>
-        <div class="row">
-          <input id="domain-input" placeholder="example.com" />
-          <button id="check-domain">Check status</button>
-          <button id="apply-dns" class="ghost" disabled>One-click add records</button>
+        <h2>Onboard your sending domain</h2>
+        <p class="muted">
+          Cloudflare Email Service domain setup is done in the Cloudflare dashboard
+          (it auto-adds the SPF, DKIM, DMARC and bounce-MX records for you). Once your
+          domain shows up here as onboarded, use the <strong>Test send</strong> tab to confirm.
+        </p>
+        <div class="callout">
+          <h4>Steps</h4>
+          <ol>
+            <li>Open <a id="dash-link" href="https://dash.cloudflare.com/?to=/:account/email-service/sending" target="_blank" rel="noopener">Email Service → Email Sending</a> in the Cloudflare dashboard (account level, under <em>Build → Compute → Email Service</em>).</li>
+            <li>Click <strong>Onboard Domain</strong>, choose your domain, then <strong>Add records and onboard</strong>.</li>
+            <li>If the domain uses Cloudflare DNS the records are added automatically; otherwise paste the shown records into your DNS provider.</li>
+            <li>Wait for the status to leave <em>Syncing</em>, then send a test from the <strong>Test send</strong> tab.</li>
+          </ol>
+          <p class="row">
+            <a id="dash-link-btn" href="https://dash.cloudflare.com/?to=/:account/email-service/sending" target="_blank" rel="noopener"><button type="button">Open Cloudflare Email Sending →</button></a>
+          </p>
         </div>
-        <p id="domain-status" class="result"></p>
-        <table id="dns-table" class="hidden">
-          <thead><tr><th>Type</th><th>Name</th><th>Value</th><th>Priority</th><th>Purpose</th></tr></thead>
-          <tbody></tbody>
-        </table>
-        <p class="muted small">DNS changes can take a few minutes (up to 24h) to propagate. Re-check status after adding them.</p>
+        <p class="muted small">Requires a Workers Paid plan with Email Sending enabled. DNS changes can take a few minutes (up to 24h) to propagate.</p>
       </section>
 
       <!-- Credentials -->
