@@ -1,0 +1,23 @@
+# Local development / testing — BUILDS the image from source (vs docker-compose.yml
+# which pulls the published GHCR image).
+#
+#   cp .env.example .env        # fill in your Cloudflare creds + secrets
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Then open http://localhost:3000/admin/ and run the setup wizard.
+services:
+  cloudflare-smtp-gateway:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      BIND_HOST: 0.0.0.0
+      DATA_DIR: /data
+    ports:
+      - "2525:2525"   # SMTP submission
+      - "3000:3000"   # HTTP /send + admin UI
+    volumes:
+      - cmg-dev-data:/data
+
+volumes:
+  cmg-dev-data:

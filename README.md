@@ -65,6 +65,12 @@ npm ci && npm run build && node dist/index.js
 # or: npm run dev
 ```
 
+### Build from source with Docker
+```bash
+cp .env.example .env        # fill in your Cloudflare creds + secrets
+docker compose -f docker-compose.dev.yml up --build
+```
+
 ### One-click PaaS
 - **Fly.io** (supports SMTP + HTTP): [`deploy/fly.toml`](deploy/fly.toml)
 - **Railway**: [`deploy/railway.json`](deploy/railway.json)
@@ -128,6 +134,8 @@ npm run dev        # tsx watch
 npm test           # vitest
 npm run typecheck && npm run lint
 ```
+
+Releases are automated — see [RELEASING.md](RELEASING.md).
 
 ## License
 MIT — see [LICENSE](LICENSE).
