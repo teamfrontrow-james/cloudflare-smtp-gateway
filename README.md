@@ -13,13 +13,13 @@ WordPress / any SMTP app ──SMTP──┐
 your code / forms ──HTTP POST─────┘     (auth · from-pinning · rate limits · admin UI)
 ```
 
-- 🔌 **SMTP _and_ HTTP** front doors, one hardened send path.
-- 🖥️ **Admin web UI**: enter your Cloudflare token, get the DNS records to add,
+- **SMTP _and_ HTTP** front doors, one hardened send path.
+- **Admin web UI**: enter your Cloudflare token, get the DNS records to add,
   verify your domain, send a test, mint SMTP/HTTP credentials, watch a live send log.
-- 🔒 **Locked down by default**: SMTP AUTH (no open relay), bearer-token HTTP,
+- **Locked down by default**: SMTP AUTH (no open relay), bearer-token HTTP,
   sender pinned to your verified domain, recipient rules, per-credential rate limits.
-- 📦 **Deploy any way you like**: Docker, `npx`, Fly.io/Render/Railway, or systemd/pm2.
-- 🪶 Small TypeScript app, no database, no build step for the UI.
+- **Deploy any way you like**: Docker, `npx`, Fly.io/Render/Railway, or systemd/pm2.
+- Small TypeScript app, no database, no build step for the UI.
 
 > ### Why a Node app and not "just a Cloudflare Worker"?
 > A Cloudflare Worker can't accept inbound SMTP connections (Workers are HTTP-only),
@@ -32,7 +32,10 @@ your code / forms ──HTTP POST─────┘     (auth · from-pinning ·
 
 ## Prerequisites
 
-1. A **Cloudflare Workers Paid** plan with **Email Service** enabled (currently beta).
+1. A **Cloudflare Workers Paid** plan ($5/month). Email **Sending** is only
+   available on Workers Paid — it includes **3,000 emails/month**, then $0.35 per
+   1,000. (Email *Routing*/receiving is free, but this tool sends, so Paid is
+   required.) Email Service is currently in beta.
 2. A **domain** you can add DNS records to.
 3. A **Cloudflare API token** with the **Send Email** permission
    (add **DNS:Edit** too if you want the one-click DNS feature). See
