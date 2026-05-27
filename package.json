@@ -1,6 +1,6 @@
 {
   "name": "cloudflare-smtp-gateway",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Self-hostable SMTP + HTTP sending gateway for Cloudflare Email Service. Point WordPress (or any app) at it and send transactional mail through Cloudflare.",
   "type": "module",
   "license": "MIT",
