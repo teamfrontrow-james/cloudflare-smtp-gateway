@@ -4,6 +4,14 @@
   "description": "Self-hostable SMTP + HTTP sending gateway for Cloudflare Email Service. Point WordPress (or any app) at it and send transactional mail through Cloudflare.",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/teamfrontrow-james/cloudflare-smtp-gateway.git"
+  },
+  "bugs": {
+    "url": "https://github.com/teamfrontrow-james/cloudflare-smtp-gateway/issues"
+  },
+  "homepage": "https://github.com/teamfrontrow-james/cloudflare-smtp-gateway#readme",
   "engines": {
     "node": ">=20"
   },
